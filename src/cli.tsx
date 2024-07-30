@@ -199,7 +199,10 @@ const App = () => {
         console.log(chalk.blue('npm install'))
       }
       console.log(chalk.blue('npm run dev'))
-      exit()
+
+      setTimeout(() => {
+        process.exit(0)
+      }, 100)
     }
   }, [step])
 

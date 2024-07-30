@@ -168,7 +168,9 @@ const App = () => {
                 console.log(chalk.blue('npm install'));
             }
             console.log(chalk.blue('npm run dev'));
-            exit();
+            setTimeout(() => {
+                process.exit(0);
+            }, 100);
         }
     }, [step]);
     return (_jsxs(Box, { flexDirection: "column", children: [step === 0 && (_jsxs(_Fragment, { children: [_jsx(Text, { children: "Enter your project name:" }), _jsx(TextInput, { value: projectName, placeholder: "my-project", onChange: setProjectName, onSubmit: handleProjectNameSubmit })] })), step === 1 && _jsx(FrameworkChoice, { onSelect: handleFrameworkSelect }), step === 2 && _jsx(LanguageChoice, { onSelect: handleLanguageSelect }), step === 3 && (_jsx(ConfirmChoice, { message: "Do you want to include Prisma?", onConfirm: handleUsePrismaSelect })), step === 4 && (_jsx(ConfirmChoice, { message: "Do you want to run 'npm install' after setup?", onConfirm: handleRunNpmInstallSelect }))] }));
