@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "description": "Hono with TypeScript project",
     "scripts": {
-        "start": "tsx src/index.ts",
-        "dev": "nodemon --watch 'src/**/*.ts' --exec 'tsx' src/index.ts"
+        "start": "tsx src/app.ts",
+        "dev": "tsx watch src/app.ts"
     },
     "dependencies": {
         "hono": "^3.2.5",
@@ -12,7 +12,6 @@
     },
     "devDependencies": {
         "@types/node": "^18.16.3",
-        "nodemon": "^2.0.22",
         "tsx": "^4.7.1",
         "typescript": "^5.0.4"
     }

@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "description": "Hono with JavaScript project",
     "scripts": {
-        "start": "node src/index.js",
-        "dev": "nodemon --watch 'src/**/*.js' src/index.js"
+        "start": "node src/app.js",
+        "dev": "nodemon --watch src/app.js"
     },
     "dependencies": {
         "hono": "^3.2.5",
