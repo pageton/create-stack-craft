@@ -1,16 +1,16 @@
 {
   "name": "create-stack-genius",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A CLI tool to create projects with Express, Hono, and Prisma",
   "bin": {
     "create-stack-genius": "dist/cli.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run copy-templates",
     "copy-templates": "cp -r 'src/templates/' dist/templates/",
     "start": "node dist/cli.js",
     "lint": "eslint . --ext .ts",
-    "format": "prettier --write 'src/**/*.{ts,js}'"
+    "format": "prettier --write 'src/**/*.{ts,js}' 'src/*.{ts,js,tsx}'"
   },
   "keywords": [
     "express",
