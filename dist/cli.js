@@ -1,261 +1,176 @@
 #!/usr/bin/env node
-var __awaiter =
-    (this && this.__awaiter) ||
-    function (thisArg, _arguments, P, generator) {
-        function adopt(value) {
-            return value instanceof P
-                ? value
-                : new P(function (resolve) {
-                      resolve(value);
-                  });
-        }
-        return new (P || (P = Promise))(function (resolve, reject) {
-            function fulfilled(value) {
-                try {
-                    step(generator.next(value));
-                } catch (e) {
-                    reject(e);
-                }
-            }
-            function rejected(value) {
-                try {
-                    step(generator["throw"](value));
-                } catch (e) {
-                    reject(e);
-                }
-            }
-            function step(result) {
-                result.done
-                    ? resolve(result.value)
-                    : adopt(result.value).then(fulfilled, rejected);
-            }
-            step(
-                (generator = generator.apply(thisArg, _arguments || [])).next()
-            );
-        });
-    };
-import { Command } from "commander";
-import inquirer from "inquirer";
-import fs from "fs-extra";
-import path from "path";
-import chalk from "chalk";
-import { execSync } from "child_process";
-import { fileURLToPath } from "url";
+import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-runtime";
+import { useState, useEffect } from 'react';
+import { render, Text, Box, useApp } from 'ink';
+import TextInput from 'ink-text-input';
+import SelectInput from 'ink-select-input';
+import fs from 'fs-extra';
+import path from 'path';
+import chalk from 'chalk';
+import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const program = new Command();
-const packageJsonPath = path.join(__dirname, "../package.json");
+const packageJsonPath = path.join(__dirname, '../package.json');
 const { version } = fs.readJsonSync(packageJsonPath);
-program
-    .version(version)
-    .description("A CLI tool to create projects with Express, Hono, and Prisma")
-    .action(() =>
-        __awaiter(void 0, void 0, void 0, function* () {
-            let validProjectName = false;
-            let projectName = "";
-            while (!validProjectName) {
-                const answers = yield inquirer.prompt([
-                    {
-                        type: "input",
-                        name: "projectName",
-                        message: "Enter your project name:",
-                        default: "my-project"
-                    }
-                ]);
-                projectName = answers.projectName;
-                const targetPath = path.join(process.cwd(), projectName);
-                if (fs.existsSync(targetPath)) {
-                    console.error(
-                        chalk.red(
-                            `The project name '${projectName}' already exists. Please enter a different name.`
-                        )
-                    );
-                } else {
-                    validProjectName = true;
-                }
-            }
-            const { framework, language, usePrisma, runNpmInstall } =
-                yield inquirer.prompt([
-                    {
-                        type: "list",
-                        name: "framework",
-                        message: "Choose the framework",
-                        choices: ["Express", "Hono"]
-                    },
-                    {
-                        type: "list",
-                        name: "language",
-                        message: "Choose the language",
-                        choices: ["TypeScript", "JavaScript"]
-                    },
-                    {
-                        type: "confirm",
-                        name: "usePrisma",
-                        message: "Do you want to include Prisma?",
-                        default: false
-                    },
-                    {
-                        type: "confirm",
-                        name: "runNpmInstall",
-                        message:
-                            "Do you want to run 'npm install' after setup?",
-                        default: true
-                    }
-                ]);
-            const templatePath = path.join(
-                __dirname,
-                "templates",
-                framework.toLowerCase(),
-                language.toLowerCase()
-            );
-            const targetPath = path.join(process.cwd(), projectName);
-            console.log(targetPath, templatePath);
+const FrameworkChoice = ({ onSelect }) => {
+    const items = [
+        { label: 'Express', value: 'express' },
+        { label: 'Hono', value: 'hono' }
+    ];
+    return _jsx(SelectInput, { items: items, onSelect: onSelect });
+};
+const LanguageChoice = ({ onSelect }) => {
+    const items = [
+        { label: 'TypeScript', value: 'typescript' },
+        { label: 'JavaScript', value: 'javascript' }
+    ];
+    return _jsx(SelectInput, { items: items, onSelect: onSelect });
+};
+const ConfirmChoice = ({ message, onConfirm }) => {
+    const items = [
+        { label: 'Yes', value: true },
+        { label: 'No', value: false }
+    ];
+    return (_jsxs(_Fragment, { children: [_jsx(Text, { children: message }), _jsx(SelectInput, { items: items, onSelect: onConfirm })] }));
+};
+const App = () => {
+    const { exit } = useApp();
+    const [projectName, setProjectName] = useState('');
+    const [step, setStep] = useState(0);
+    const [framework, setFramework] = useState('');
+    const [language, setLanguage] = useState('');
+    const [usePrisma, setUsePrisma] = useState(false);
+    const [runNpmInstall, setRunNpmInstall] = useState(true);
+    const handleProjectNameSubmit = () => {
+        const targetPath = path.join(process.cwd(), projectName || 'my-project');
+        if (fs.existsSync(targetPath)) {
+            console.error(chalk.red(`The project name '${projectName}' already exists. Please enter a different name.`));
+            setProjectName('');
+        }
+        else {
+            setStep(1);
+        }
+    };
+    const handleFrameworkSelect = (item) => {
+        setFramework(item.value);
+        setStep(2);
+    };
+    const handleLanguageSelect = (item) => {
+        setLanguage(item.value);
+        setStep(3);
+    };
+    const handleUsePrismaSelect = (item) => {
+        setUsePrisma(item.value);
+        setStep(4);
+    };
+    const handleRunNpmInstallSelect = (item) => {
+        setRunNpmInstall(item.value);
+        setStep(5);
+    };
+    useEffect(() => {
+        if (step === 5) {
+            const templatePath = path.join(__dirname, 'templates', framework, language);
+            const targetPath = path.join(process.cwd(), projectName || 'my-project');
             if (!fs.existsSync(templatePath)) {
-                console.error(
-                    chalk.red(`Template path does not exist: ${templatePath}`)
-                );
+                console.error(chalk.red(`Template path does not exist: ${templatePath}`));
                 process.exit(1);
             }
             try {
                 fs.copySync(templatePath, targetPath);
-            } catch (error) {
-                console.error(
-                    chalk.red(`Error copying files: ${error.message}`)
-                );
+            }
+            catch (error) {
+                if (error instanceof Error) {
+                    console.error(chalk.red(`Error copying files: ${error.message}`));
+                }
+                else {
+                    console.error(chalk.red(`Unexpected error copying files`));
+                }
                 process.exit(1);
             }
             if (usePrisma) {
-                const prismaTemplatePath = path.join(
-                    __dirname,
-                    "templates",
-                    "prisma"
-                );
-                if (!fs.existsSync(prismaTemplatePath)) {
-                    console.error(
-                        chalk.red(
-                            `Prisma template path does not exist: ${prismaTemplatePath}`
-                        )
-                    );
-                    process.exit(1);
-                }
-                try {
-                    const prismaTargetPath = path.join(targetPath, "prisma");
-                    fs.ensureDirSync(prismaTargetPath);
-                    const prismaFiles = ["schema.prisma"];
-                    prismaFiles.forEach((file) => {
-                        const prismaFilePath = path.join(
-                            prismaTemplatePath,
-                            file
-                        );
-                        if (fs.existsSync(prismaFilePath)) {
-                            fs.copySync(
-                                prismaFilePath,
-                                path.join(prismaTargetPath, file)
-                            );
-                        } else {
-                            console.error(
-                                chalk.red(
-                                    `${file} not found in ${prismaTemplatePath}.`
-                                )
-                            );
-                        }
-                    });
-                    const envFiles = [".env", ".env.example"];
-                    envFiles.forEach((file) => {
-                        const envFilePath = path.join(prismaTemplatePath, file);
-                        if (fs.existsSync(envFilePath)) {
-                            fs.copySync(
-                                envFilePath,
-                                path.join(targetPath, file)
-                            );
-                        } else {
-                            console.error(
-                                chalk.red(
-                                    `${file} not found in ${prismaTemplatePath}.`
-                                )
-                            );
-                        }
-                    });
-                } catch (error) {
-                    console.error(
-                        chalk.red(
-                            `Error copying Prisma files: ${error.message}`
-                        )
-                    );
-                    process.exit(1);
-                }
-                const packageJsonPath = path.join(targetPath, "package.json");
+                const prismaTemplatePath = path.join(__dirname, 'templates', 'prisma');
+                const prismaTargetPath = path.join(targetPath, 'prisma');
+                fs.ensureDirSync(prismaTargetPath);
+                const prismaFiles = ['schema.prisma'];
+                prismaFiles.forEach((file) => {
+                    const prismaFilePath = path.join(prismaTemplatePath, file);
+                    if (fs.existsSync(prismaFilePath)) {
+                        fs.copySync(prismaFilePath, path.join(prismaTargetPath, file));
+                    }
+                    else {
+                        console.error(chalk.red(`${file} not found in ${prismaTemplatePath}.`));
+                    }
+                });
+                const envFiles = ['.env', '.env.example'];
+                envFiles.forEach((file) => {
+                    const envFilePath = path.join(prismaTemplatePath, file);
+                    if (fs.existsSync(envFilePath)) {
+                        fs.copySync(envFilePath, path.join(targetPath, file));
+                    }
+                    else {
+                        console.error(chalk.red(`${file} not found in ${prismaTemplatePath}.`));
+                    }
+                });
+                const packageJsonPath = path.join(targetPath, 'package.json');
                 if (fs.existsSync(packageJsonPath)) {
                     try {
                         const packageJson = fs.readJsonSync(packageJsonPath);
-                        packageJson.dependencies = Object.assign(
-                            Object.assign({}, packageJson.dependencies),
-                            {
-                                prisma: "^5.16.2",
-                                "@prisma/client": "^5.16.2",
-                                dotenv: "^16.4.5"
-                            }
-                        );
-                        packageJson.scripts = Object.assign(
-                            Object.assign(
-                                {
-                                    "db:generate": "prisma generate",
-                                    "db:migrate": "prisma migrate deploy",
-                                    "db:push": "prisma db push",
-                                    "db:studio": "prisma studio"
-                                },
-                                packageJson.scripts
-                            ),
-                            { postinstall: "prisma generate" }
-                        );
-                        fs.writeJsonSync(packageJsonPath, packageJson, {
-                            spaces: 2
-                        });
-                    } catch (error) {
-                        console.error(
-                            chalk.red(
-                                `Error updating package.json: ${error.message}`
-                            )
-                        );
+                        packageJson.dependencies = {
+                            ...packageJson.dependencies,
+                            prisma: '^5.16.2',
+                            '@prisma/client': '^5.16.2',
+                            dotenv: '^16.4.5'
+                        };
+                        packageJson.scripts = {
+                            'db:generate': 'prisma generate',
+                            'db:migrate': 'prisma migrate deploy',
+                            'db:push': 'prisma db push',
+                            'db:studio': 'prisma studio',
+                            ...packageJson.scripts,
+                            postinstall: 'prisma generate'
+                        };
+                        fs.writeJsonSync(packageJsonPath, packageJson, { spaces: 2 });
+                    }
+                    catch (error) {
+                        if (error instanceof Error) {
+                            console.error(chalk.red(`Error updating package.json: ${error.message}`));
+                        }
+                        else {
+                            console.error(chalk.red(`Unexpected error updating package.json`));
+                        }
                         process.exit(1);
                     }
-                } else {
-                    console.error(
-                        chalk.red(`package.json not found in ${targetPath}`)
-                    );
+                }
+                else {
+                    console.error(chalk.red(`package.json not found in ${targetPath}`));
                     process.exit(1);
                 }
             }
             if (runNpmInstall) {
                 try {
-                    execSync("npm install", {
-                        stdio: "inherit",
-                        cwd: targetPath
-                    });
-                } catch (error) {
-                    console.error(
-                        chalk.red(
-                            `Error installing dependencies: ${error.message}`
-                        )
-                    );
+                    execSync('npm install', { stdio: 'inherit', cwd: targetPath });
+                }
+                catch (error) {
+                    if (error instanceof Error) {
+                        console.error(chalk.red(`Error installing dependencies: ${error.message}`));
+                    }
+                    else {
+                        console.error(chalk.red(`Unexpected error installing dependencies`));
+                    }
                     process.exit(1);
                 }
             }
-            console.log(
-                chalk.yellowBright(
-                    `Project setup is complete. Your project is ready at ${targetPath}`
-                )
-            );
-            console.log(
-                chalk.yellowBright(
-                    `To get started, run the following commands:`
-                )
-            );
-            console.log(chalk.blue(`'cd ${projectName}'`));
+            console.log(chalk.yellowBright(`Project setup is complete. Your project is ready at ${targetPath}`));
+            console.log(chalk.yellowBright(`To get started, run the following commands:`));
+            console.log(chalk.blue(`cd ${projectName || 'my-project'}`));
             if (!runNpmInstall) {
-                console.log(chalk.blue(`'npm install'`));
+                console.log(chalk.blue('npm install'));
             }
-            console.log(chalk.blue(`'npm run dev'`));
-        })
-    );
-program.parse(process.argv);
+            console.log(chalk.blue('npm run dev'));
+            exit();
+        }
+    }, [step]);
+    return (_jsxs(Box, { flexDirection: "column", children: [step === 0 && (_jsxs(_Fragment, { children: [_jsx(Text, { children: "Enter your project name:" }), _jsx(TextInput, { value: projectName, placeholder: "my-project", onChange: setProjectName, onSubmit: handleProjectNameSubmit })] })), step === 1 && _jsx(FrameworkChoice, { onSelect: handleFrameworkSelect }), step === 2 && _jsx(LanguageChoice, { onSelect: handleLanguageSelect }), step === 3 && (_jsx(ConfirmChoice, { message: "Do you want to include Prisma?", onConfirm: handleUsePrismaSelect })), step === 4 && (_jsx(ConfirmChoice, { message: "Do you want to run 'npm install' after setup?", onConfirm: handleRunNpmInstallSelect }))] }));
+};
+render(_jsx(App, {}));
