@@ -1,18 +1,22 @@
 {
-    "compilerOptions": {
-        "target": "ES6",
-        "module": "ESNext",
-        "outDir": "./dist",
-        "skipLibCheck": true,
-        "strict": false,
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "moduleResolution": "node",
-        "resolveJsonModule": true,
-        "isolatedModules": true,
-        "noEmitOnError": true,
-        "rootDirs": ["src"]
-    },
-    "include": ["src"],
-    "exclude": ["node_modules", "dist", "src/templates", "types.ts"]
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "Node16",
+    "outDir": "./dist",
+    "skipLibCheck": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node16",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmitOnError": true,
+    "rootDirs": ["src"],
+    "lib": ["ESNext", "DOM"],
+    "jsx": "react-jsx"
+  },
+  "include": ["src", "types"],
+  "exclude": ["node_modules", "dist", "src/templates"]
 }
