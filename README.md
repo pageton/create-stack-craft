@@ -11,7 +11,7 @@
 
 ## Installation
 
-To use Create Stack Genius, you need to have Node.js and npm installed on your machine. You can install Create Stack Genius globally using [npm](https://www.npmjs.com/package/stack-genius):
+To use Create Stack Genius, you need to have Node.js and npm installed on your machine. You can install Create Stack Genius globally using [npm](https://www.npmjs.com/package/create-stack-genius):
 
 ```bash
 npm install -g create-stack-genius
