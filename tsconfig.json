@@ -17,6 +17,6 @@
     "lib": ["ESNext", "DOM"],
     "jsx": "react-jsx"
   },
-  "include": ["src", "types"],
-  "exclude": ["node_modules", "dist", "src/templates"]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
 }
