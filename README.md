@@ -4,10 +4,10 @@
 
 ## Features
 
--   Create projects with Express or Hono.
--   Choose between TypeScript or JavaScript.
--   Optionally include Prisma for database management.
--   Automatically set up the project structure and dependencies.
+- Create projects with Express or Hono.
+- Choose between TypeScript or JavaScript.
+- Optionally include Prisma for database management.
+- Automatically set up the project structure and dependencies.
 
 ## Installation
 
@@ -78,23 +78,35 @@ my-project/
 └── tsconfig.json (if TypeScript is selected)
 ```
 
+## Template Files
+
+The template files for different setups can be found in the [Stack Craft Templates repository](https://github.com/dev-rio/stack-craft-templates/).
+
 ## Scripts
 
 The generated `package.json` will include the following scripts:
 
--   `build`: Compile the TypeScript code (if TypeScript is selected).
--   `start`: Run the compiled code.
--   `lint`: Run ESLint on the project.
--   `db:generate`: Generate Prisma client (if Prisma is included).
--   `db:migrate`: Run Prisma migrations (if Prisma is included).
--   `db:push`: Push the Prisma schema to the database (if Prisma is included).
--   `db:studio`: Open Prisma Studio (if Prisma is included).
+- `build`: Compile the TypeScript code (if TypeScript is selected).
+- `start`: Run the compiled code.
+- `lint`: Run ESLint on the project.
+- `db:generate`: Generate Prisma client (if Prisma is included).
+- `db:migrate`: Run Prisma migrations (if Prisma is included).
+- `db:push`: Push the Prisma schema to the database (if Prisma is included).
+- `db:studio`: Open Prisma Studio (if Prisma is included).
 
-## Links
+## Available Templates
 
--   [Prisma](https://www.prisma.io/)
--   [Hono](https://honojs.dev/)
--   [Express](https://expressjs.com/)
+### Frameworks
+
+- **[Express](https://expressjs.com/)**
+- **[Fastify](https://fastify.dev/)**
+- **[Hapi](https://hapi.dev/)**
+- **[Hono](https://hono.dev/)**
+- **[Koa](https://koajs.com/)**
+
+### Additional Tools
+
+- **[Prisma](https://www.prisma.io/)**
 
 ## Contributing
 
