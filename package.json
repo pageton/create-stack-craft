@@ -1,13 +1,13 @@
 {
   "name": "create-stack-craft",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A CLI tool to create projects with Express, Hono, and Prisma",
   "bin": {
     "create-stack-craft": "dist/cli.js"
   },
   "scripts": {
-    "build": "tsc && npm run copy-templates",
-    "copy-templates": "cp -r 'src/templates/' dist/templates/",
+    "dev": "tsx src/cli.tsx",
+    "build": "tsc",
     "start": "node dist/cli.js",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write 'src/**/*.{ts,js}' 'src/*.{ts,js,tsx}'"
@@ -40,7 +40,9 @@
     "ink-select-input": "^6.0.0",
     "ink-text-input": "^6.0.0",
     "path": "^0.12.7",
-    "prettier": "^3.3.3"
+    "prettier": "^3.3.3",
+    "simple-git": "^3.25.0",
+    "tsx": "^4.16.3"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.1",
