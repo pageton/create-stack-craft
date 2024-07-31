@@ -1,6 +1,6 @@
-# Create Stack Genius
+# Create Stack Craft
 
-**Create Stack Genius** is a CLI tool to create projects with Express, Hono, and Prisma. This tool helps you quickly set up a new project with the desired framework, language, and Prisma integration.
+**Create Stack Craft** is a CLI tool to create projects with Express, Hono, and Prisma. This tool helps you quickly set up a new project with the desired framework, language, and Prisma integration.
 
 ## Features
 
@@ -11,10 +11,10 @@
 
 ## Installation
 
-To use Create Stack Genius, you need to have Node.js and npm installed on your machine. You can install Create Stack Genius globally using [npm](https://www.npmjs.com/package/create-stack-genius):
+To use Create Stack Craft, you need to have Node.js and npm installed on your machine. You can install Create Stack Craft globally using [npm](https://www.npmjs.com/package/create-stack-craft):
 
 ```bash
-npm install -g create-stack-genius
+npm install -g create-stack-craft
 ```
 
 ## Usage
@@ -22,13 +22,13 @@ npm install -g create-stack-genius
 You can create a new project by running the following command with `npm`:
 
 ```bash
-npm create stack-genius@latest
+npm create stack-craft@latest
 ```
 
 Or with `pnpm`:
 
 ```bash
-pnpm create stack-genius@latest
+pnpm create stack-craft@latest
 ```
 
 ### Interactive Prompts
@@ -44,13 +44,13 @@ You will be prompted to enter the following information:
 ### Example
 
 ```bash
-npm create stack-genius@latest
+npm create stack-craft@latest
 ```
 
 or
 
 ```bash
-pnpm create stack-genius@latest
+pnpm create stack-craft@latest
 ```
 
 Follow the prompts to create your project. Once the setup is complete, navigate to your project directory and start the development server:
