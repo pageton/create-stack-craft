@@ -9,24 +9,32 @@ import path from 'path'
 import chalk from 'chalk'
 import { execSync } from 'child_process'
 import { fileURLToPath } from 'url'
+import { simpleGit, SimpleGit } from 'simple-git'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const packageJsonPath = path.join(__dirname, '../package.json')
-const { version } = fs.readJsonSync(packageJsonPath)
+const git: SimpleGit = simpleGit()
+
+interface ChoiceItem {
+  label: string
+  value: string | boolean
+}
 
 const FrameworkChoice = ({ onSelect }: { onSelect: (item: any) => void }) => {
-  const items = [
+  const items: ChoiceItem[] = [
     { label: 'Express', value: 'express' },
-    { label: 'Hono', value: 'hono' }
+    { label: 'Hono', value: 'hono' },
+    { label: 'Koa', value: 'koa' },
+    { label: 'Hapi', value: 'hapi' },
+    { label: 'Fastify', value: 'fastify' }
   ]
 
   return <SelectInput items={items} onSelect={onSelect} />
 }
 
 const LanguageChoice = ({ onSelect }: { onSelect: (item: any) => void }) => {
-  const items = [
+  const items: ChoiceItem[] = [
     { label: 'TypeScript', value: 'typescript' },
     { label: 'JavaScript', value: 'javascript' }
   ]
@@ -41,7 +49,7 @@ const ConfirmChoice = ({
   message: string
   onConfirm: (item: any) => void
 }) => {
-  const items = [
+  const items: ChoiceItem[] = [
     { label: 'Yes', value: true },
     { label: 'No', value: false }
   ]
@@ -54,21 +62,68 @@ const ConfirmChoice = ({
   )
 }
 
+const downloadTemplate = async (
+  repoPath: string,
+  subPath: string,
+  language: string,
+  targetPath: string,
+  prisma: boolean = false
+) => {
+  const tempDir = path.join(__dirname, 'temp')
+
+  if (fs.existsSync(tempDir)) {
+    fs.removeSync(tempDir)
+  }
+
+  await git.clone(`https://github.com/${repoPath}.git`, tempDir, ['--depth=1'])
+
+  const sourcePath = path.join(tempDir, 'templates', subPath, language)
+  const prismaPath = path.join(tempDir, 'templates', 'prisma')
+  const prismaFiles = ['schema.prisma', '.env', '.env.example']
+
+  fs.copySync(sourcePath, targetPath)
+
+  prismaFiles.forEach((file) => {
+    const srcFile = path.join(prismaPath, file)
+    let destDir, destFile
+
+    if (file === 'schema.prisma') {
+      destDir = path.join(targetPath, 'prisma')
+      destFile = path.join(destDir, file)
+    } else {
+      destDir = targetPath
+      destFile = path.join(destDir, file)
+    }
+
+    if (fs.existsSync(srcFile)) {
+      if (!fs.existsSync(destDir)) {
+        fs.mkdirSync(destDir, { recursive: true })
+      }
+      fs.copyFileSync(srcFile, destFile)
+    } else {
+      console.warn(`File ${srcFile} does not exist.`)
+    }
+  })
+
+  fs.removeSync(tempDir)
+}
+
 const App = () => {
   const { exit } = useApp()
-  const [projectName, setProjectName] = useState('')
-  const [step, setStep] = useState(0)
-  const [framework, setFramework] = useState('')
-  const [language, setLanguage] = useState('')
-  const [usePrisma, setUsePrisma] = useState(false)
-  const [runNpmInstall, setRunNpmInstall] = useState(true)
+  const [projectName, setProjectName] = useState<string>('')
+  const [step, setStep] = useState<number>(0)
+  const [framework, setFramework] = useState<string>('')
+  const [language, setLanguage] = useState<string>('')
+  const [usePrisma, setUsePrisma] = useState<boolean>(false)
+  const [runNpmInstall, setRunNpmInstall] = useState<boolean>(true)
+  const [initGit, setInitGit] = useState<boolean>(false)
 
   const handleProjectNameSubmit = () => {
     const targetPath = path.join(process.cwd(), projectName || 'my-project')
     if (fs.existsSync(targetPath)) {
       console.error(
         chalk.red(
-          `The project name '${projectName}' already exists. Please enter a different name.`
+          `The project name '${projectName || 'my-project'}' already exists. Please enter a different name.`
         )
       )
       setProjectName('')
@@ -78,131 +133,118 @@ const App = () => {
   }
 
   const handleFrameworkSelect = (item: any) => {
-    setFramework(item.value)
+    setFramework(item.value as string)
     setStep(2)
   }
 
   const handleLanguageSelect = (item: any) => {
-    setLanguage(item.value)
+    setLanguage(item.value as string)
     setStep(3)
   }
 
   const handleUsePrismaSelect = (item: any) => {
-    setUsePrisma(item.value)
+    setUsePrisma(item.value as boolean)
     setStep(4)
   }
 
   const handleRunNpmInstallSelect = (item: any) => {
-    setRunNpmInstall(item.value)
+    setRunNpmInstall(item.value as boolean)
     setStep(5)
   }
 
+  const handleInitGitSelect = (item: any) => {
+    setInitGit(item.value as boolean)
+    setStep(6)
+  }
+
   useEffect(() => {
-    if (step === 5) {
-      const templatePath = path.join(__dirname, 'templates', framework, language)
+    if (step === 6) {
+      const repoPath = 'dev-rio/stack-craft-templates'
+      const templateSubPath = framework
       const targetPath = path.join(process.cwd(), projectName || 'my-project')
 
-      if (!fs.existsSync(templatePath)) {
-        console.error(chalk.red(`Template path does not exist: ${templatePath}`))
-        process.exit(1)
+      if (!fs.existsSync(targetPath)) {
+        fs.ensureDirSync(targetPath)
       }
 
-      try {
-        fs.copySync(templatePath, targetPath)
-      } catch (error) {
-        if (error instanceof Error) {
-          console.error(chalk.red(`Error copying files: ${error.message}`))
-        } else {
-          console.error(chalk.red(`Unexpected error copying files`))
-        }
-        process.exit(1)
-      }
-
-      if (usePrisma) {
-        const prismaTemplatePath = path.join(__dirname, 'templates', 'prisma')
-        const prismaTargetPath = path.join(targetPath, 'prisma')
-        fs.ensureDirSync(prismaTargetPath)
-
-        const prismaFiles = ['schema.prisma']
-        prismaFiles.forEach((file) => {
-          const prismaFilePath = path.join(prismaTemplatePath, file)
-          if (fs.existsSync(prismaFilePath)) {
-            fs.copySync(prismaFilePath, path.join(prismaTargetPath, file))
-          } else {
-            console.error(chalk.red(`${file} not found in ${prismaTemplatePath}.`))
-          }
-        })
-
-        const envFiles = ['.env', '.env.example']
-        envFiles.forEach((file) => {
-          const envFilePath = path.join(prismaTemplatePath, file)
-          if (fs.existsSync(envFilePath)) {
-            fs.copySync(envFilePath, path.join(targetPath, file))
-          } else {
-            console.error(chalk.red(`${file} not found in ${prismaTemplatePath}.`))
-          }
-        })
-
-        const packageJsonPath = path.join(targetPath, 'package.json')
-        if (fs.existsSync(packageJsonPath)) {
+      downloadTemplate(repoPath, templateSubPath, language, targetPath, usePrisma).then(() => {
+        if (initGit) {
           try {
-            const packageJson = fs.readJsonSync(packageJsonPath)
-            packageJson.dependencies = {
-              ...packageJson.dependencies,
-              prisma: '^5.16.2',
-              '@prisma/client': '^5.16.2',
-              dotenv: '^16.4.5'
-            }
-            packageJson.scripts = {
-              'db:generate': 'prisma generate',
-              'db:migrate': 'prisma migrate deploy',
-              'db:push': 'prisma db push',
-              'db:studio': 'prisma studio',
-              ...packageJson.scripts,
-              postinstall: 'prisma generate'
-            }
-
-            fs.writeJsonSync(packageJsonPath, packageJson, { spaces: 2 })
+            execSync('git init', { stdio: 'inherit', cwd: targetPath })
+            execSync('git add .', { stdio: 'inherit', cwd: targetPath })
+            execSync('git commit -m "Initial commit"', { stdio: 'inherit', cwd: targetPath })
           } catch (error) {
             if (error instanceof Error) {
-              console.error(chalk.red(`Error updating package.json: ${error.message}`))
+              console.error(chalk.red(`Error initializing git repository: ${error.message}`))
             } else {
-              console.error(chalk.red(`Unexpected error updating package.json`))
+              console.error(chalk.red(`Unexpected error initializing git repository`))
             }
             process.exit(1)
           }
-        } else {
-          console.error(chalk.red(`package.json not found in ${targetPath}`))
-          process.exit(1)
         }
-      }
 
-      if (runNpmInstall) {
-        try {
-          execSync('npm install', { stdio: 'inherit', cwd: targetPath })
-        } catch (error) {
-          if (error instanceof Error) {
-            console.error(chalk.red(`Error installing dependencies: ${error.message}`))
+        if (usePrisma) {
+          const packageJsonPath = path.join(targetPath, 'package.json')
+          if (fs.existsSync(packageJsonPath)) {
+            try {
+              const packageJson = fs.readJsonSync(packageJsonPath)
+              packageJson.dependencies = {
+                ...packageJson.dependencies,
+                prisma: '^5.16.2',
+                '@prisma/client': '^5.16.2',
+                dotenv: '^16.4.5'
+              }
+              packageJson.scripts = {
+                'db:generate': 'prisma generate',
+                'db:migrate': 'prisma migrate deploy',
+                'db:push': 'prisma db push',
+                'db:studio': 'prisma studio',
+                ...packageJson.scripts,
+                postinstall: 'prisma generate'
+              }
+
+              fs.writeJsonSync(packageJsonPath, packageJson, { spaces: 2 })
+            } catch (error) {
+              if (error instanceof Error) {
+                console.error(chalk.red(`Error updating package.json: ${error.message}`))
+              } else {
+                console.error(chalk.red(`Unexpected error updating package.json`))
+              }
+              process.exit(1)
+            }
           } else {
-            console.error(chalk.red(`Unexpected error installing dependencies`))
+            console.error(chalk.red(`package.json not found in ${targetPath}`))
+            process.exit(1)
           }
-          process.exit(1)
         }
-      }
 
-      console.log(
-        chalk.yellowBright(`Project setup is complete. Your project is ready at ${targetPath}`)
-      )
-      console.log(chalk.yellowBright(`To get started, run the following commands:`))
-      console.log(chalk.blue(`cd ${projectName || 'my-project'}`))
-      if (!runNpmInstall) {
-        console.log(chalk.blue('npm install'))
-      }
-      console.log(chalk.blue('npm run dev'))
+        if (runNpmInstall) {
+          try {
+            execSync('npm install', { stdio: 'inherit', cwd: targetPath })
+          } catch (error) {
+            if (error instanceof Error) {
+              console.error(chalk.red(`Error installing dependencies: ${error.message}`))
+            } else {
+              console.error(chalk.red(`Unexpected error installing dependencies`))
+            }
+            process.exit(1)
+          }
+        }
 
-      setTimeout(() => {
-        process.exit(0)
-      }, 100)
+        console.log(
+          chalk.yellowBright(`Project setup is complete. Your project is ready at ${targetPath}`)
+        )
+        console.log(chalk.yellowBright(`To get started, run the following commands:`))
+        console.log(chalk.blue(`cd ${projectName || 'my-project'}`))
+        if (!runNpmInstall) {
+          console.log(chalk.blue('npm install'))
+        }
+        console.log(chalk.blue('npm run dev'))
+
+        setTimeout(() => {
+          process.exit(0)
+        }, 100)
+      })
     }
   }, [step])
 
@@ -228,6 +270,12 @@ const App = () => {
         <ConfirmChoice
           message="Do you want to run 'npm install' after setup?"
           onConfirm={handleRunNpmInstallSelect}
+        />
+      )}
+      {step === 5 && (
+        <ConfirmChoice
+          message="Do you want to initialize a git repository?"
+          onConfirm={handleInitGitSelect}
         />
       )}
     </Box>
