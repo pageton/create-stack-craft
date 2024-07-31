@@ -15,7 +15,7 @@
     "noEmitOnError": true,
     "rootDirs": ["src"],
     "lib": ["ESNext", "DOM"],
-    "jsx": "react-jsx"
+    "jsx": "preserve"
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
