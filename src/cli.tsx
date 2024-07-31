@@ -82,28 +82,29 @@ const downloadTemplate = async (
   const prismaFiles = ['schema.prisma', '.env', '.env.example']
 
   fs.copySync(sourcePath, targetPath)
+  if (prisma) {
+    prismaFiles.forEach((file) => {
+      const srcFile = path.join(prismaPath, file)
+      let destDir, destFile
 
-  prismaFiles.forEach((file) => {
-    const srcFile = path.join(prismaPath, file)
-    let destDir, destFile
-
-    if (file === 'schema.prisma') {
-      destDir = path.join(targetPath, 'prisma')
-      destFile = path.join(destDir, file)
-    } else {
-      destDir = targetPath
-      destFile = path.join(destDir, file)
-    }
-
-    if (fs.existsSync(srcFile)) {
-      if (!fs.existsSync(destDir)) {
-        fs.mkdirSync(destDir, { recursive: true })
+      if (file === 'schema.prisma') {
+        destDir = path.join(targetPath, 'prisma')
+        destFile = path.join(destDir, file)
+      } else {
+        destDir = targetPath
+        destFile = path.join(destDir, file)
       }
-      fs.copyFileSync(srcFile, destFile)
-    } else {
-      console.warn(`File ${srcFile} does not exist.`)
-    }
-  })
+
+      if (fs.existsSync(srcFile)) {
+        if (!fs.existsSync(destDir)) {
+          fs.mkdirSync(destDir, { recursive: true })
+        }
+        fs.copyFileSync(srcFile, destFile)
+      } else {
+        console.warn(`File ${srcFile} does not exist.`)
+      }
+    })
+  }
 
   fs.removeSync(tempDir)
 }
