@@ -9,14 +9,6 @@
 - Optionally include Prisma for database management.
 - Automatically set up the project structure and dependencies.
 
-## Installation
-
-To use Create Stack Craft, you need to have Node.js and npm installed on your machine. You can install Create Stack Craft globally using [npm](https://www.npmjs.com/package/create-stack-craft):
-
-```bash
-npm install -g create-stack-craft
-```
-
 ## Usage
 
 You can create a new project by running the following command with `npm`:
