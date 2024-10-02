@@ -109,6 +109,60 @@ const downloadTemplate = async (
   fs.removeSync(tempDir)
 }
 
+const DatabaseChoice = ({ onSelect }: { onSelect: (item: any) => void }) => {
+  const items: ChoiceItem[] = [
+    { label: 'SQLite', value: 'sqlite' },
+    { label: 'MySQL', value: 'mysql' },
+    { label: 'PostgreSQL', value: 'postgresql' }
+  ]
+
+  return <SelectInput items={items} onSelect={onSelect} />
+}
+
+const updatePrismaSchema = (targetPath: string, database: string) => {
+  const schemaPath = path.join(targetPath, 'prisma', 'schema.prisma')
+  if (fs.existsSync(schemaPath)) {
+    let schemaContent = fs.readFileSync(schemaPath, 'utf-8')
+
+    const providerMap: { [key: string]: string } = {
+      sqlite: 'sqlite',
+      mysql: 'mysql',
+      postgresql: 'postgresql'
+    }
+    schemaContent = schemaContent.replace(
+      /datasource db\s*{\s*provider\s*=\s*".*"/,
+      `datasource db {\n  provider = "${providerMap[database]}"`
+    )
+    fs.writeFileSync(schemaPath, schemaContent, 'utf-8')
+  } else {
+    console.error(chalk.red(`schema.prisma not found at ${schemaPath}`))
+  }
+}
+
+const updateEnvFiles = (targetPath: string, database: string) => {
+  const envFiles = ['.env', '.env.example']
+  const dbUrlMap: { [key: string]: string } = {
+    sqlite: 'file:./db.sqlite',
+    mysql: 'mysql://USER:PASSWORD@HOST:PORT/DATABASE',
+    postgresql: 'postgresql://USER:PASSWORD@HOST:PORT/DATABASE'
+  }
+
+  envFiles.forEach((file) => {
+    const envFilePath = path.join(targetPath, file)
+    if (fs.existsSync(envFilePath)) {
+      let envContent = fs.readFileSync(envFilePath, 'utf-8')
+
+      envContent = envContent.replace(
+        /DATABASE_URL\s*=\s*.*/,
+        `DATABASE_URL="${dbUrlMap[database]}"`
+      )
+      fs.writeFileSync(envFilePath, envContent, 'utf-8')
+    } else {
+      console.warn(chalk.yellow(`Env file ${envFilePath} not found.`))
+    }
+  })
+}
+
 const App = () => {
   const { exit } = useApp()
   const [projectName, setProjectName] = useState<string>('')
@@ -116,6 +170,7 @@ const App = () => {
   const [framework, setFramework] = useState<string>('')
   const [language, setLanguage] = useState<string>('')
   const [usePrisma, setUsePrisma] = useState<boolean>(false)
+  const [database, setDatabase] = useState<string>('')
   const [runNpmInstall, setRunNpmInstall] = useState<boolean>(true)
   const [initGit, setInitGit] = useState<boolean>(false)
 
@@ -145,21 +200,30 @@ const App = () => {
 
   const handleUsePrismaSelect = (item: any) => {
     setUsePrisma(item.value as boolean)
-    setStep(4)
+    if (item.value) {
+      setStep(4)
+    } else {
+      setStep(5)
+    }
+  }
+
+  const handleDatabaseSelect = (item: any) => {
+    setDatabase(item.value as string)
+    setStep(5)
   }
 
   const handleRunNpmInstallSelect = (item: any) => {
     setRunNpmInstall(item.value as boolean)
-    setStep(5)
+    setStep(6)
   }
 
   const handleInitGitSelect = (item: any) => {
     setInitGit(item.value as boolean)
-    setStep(6)
+    setStep(7)
   }
 
   useEffect(() => {
-    if (step === 6) {
+    if (step === 7) {
       const repoPath = 'dev-rio/stack-craft-templates'
       const templateSubPath = framework
       const targetPath = path.join(process.cwd(), projectName || 'my-project')
@@ -169,32 +233,22 @@ const App = () => {
       }
 
       downloadTemplate(repoPath, templateSubPath, language, targetPath, usePrisma).then(() => {
-        if (initGit) {
-          try {
-            execSync('git init', { stdio: 'inherit', cwd: targetPath })
-            execSync('git add .', { stdio: 'inherit', cwd: targetPath })
-            execSync('git commit -m "Initial commit"', { stdio: 'inherit', cwd: targetPath })
-          } catch (error) {
-            if (error instanceof Error) {
-              console.error(chalk.red(`Error initializing git repository: ${error.message}`))
-            } else {
-              console.error(chalk.red(`Unexpected error initializing git repository`))
-            }
-            process.exit(1)
-          }
-        }
-
         if (usePrisma) {
           const packageJsonPath = path.join(targetPath, 'package.json')
           if (fs.existsSync(packageJsonPath)) {
             try {
               const packageJson = fs.readJsonSync(packageJsonPath)
+
               packageJson.dependencies = {
                 ...packageJson.dependencies,
                 prisma: '^5.16.2',
                 '@prisma/client': '^5.16.2',
-                dotenv: '^16.4.5'
+                dotenv: '^16.4.5',
+                express: '^4.18.2',
+                cors: '^2.8.5',
+                axios: '^1.2.0'
               }
+
               packageJson.scripts = {
                 'db:generate': 'prisma generate',
                 'db:migrate': 'prisma migrate deploy',
@@ -215,6 +269,23 @@ const App = () => {
             }
           } else {
             console.error(chalk.red(`package.json not found in ${targetPath}`))
+            process.exit(1)
+          }
+          updatePrismaSchema(targetPath, database)
+          updateEnvFiles(targetPath, database)
+        }
+
+        if (initGit) {
+          try {
+            execSync('git init', { stdio: 'inherit', cwd: targetPath })
+            execSync('git add .', { stdio: 'inherit', cwd: targetPath })
+            execSync('git commit -m "Initial commit"', { stdio: 'inherit', cwd: targetPath })
+          } catch (error) {
+            if (error instanceof Error) {
+              console.error(chalk.red(`Error initializing git repository: ${error.message}`))
+            } else {
+              console.error(chalk.red(`Unexpected error initializing git repository`))
+            }
             process.exit(1)
           }
         }
@@ -267,13 +338,14 @@ const App = () => {
       {step === 3 && (
         <ConfirmChoice message="Do you want to include Prisma?" onConfirm={handleUsePrismaSelect} />
       )}
-      {step === 4 && (
+      {step === 4 && <DatabaseChoice onSelect={handleDatabaseSelect} />}
+      {step === 5 && (
         <ConfirmChoice
           message="Do you want to run 'npm install' after setup?"
           onConfirm={handleRunNpmInstallSelect}
         />
       )}
-      {step === 5 && (
+      {step === 6 && (
         <ConfirmChoice
           message="Do you want to initialize a git repository?"
           onConfirm={handleInitGitSelect}
